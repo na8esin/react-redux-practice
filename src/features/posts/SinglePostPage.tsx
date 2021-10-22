@@ -1,11 +1,12 @@
 import React from 'react'
-import {useAppSelector} from '../../app/hooks';
-import {RouteComponentProps} from 'react-router-dom';
+import { useAppSelector } from '../../app/hooks';
+import { RouteComponentProps } from 'react-router-dom';
+import { Link } from 'react-router-dom'
 
-type SinglePostPageProps = RouteComponentProps<{postId: string}>;
+type SinglePostPageProps = RouteComponentProps<{ postId: string }>;
 
 // React Router will pass in a match object as a prop that contains the URL information
-export const SinglePostPage = ({ match }:SinglePostPageProps) => {
+export const SinglePostPage = ({ match }: SinglePostPageProps) => {
   const { postId } = match.params
 
   const post = useAppSelector(state =>
@@ -25,6 +26,9 @@ export const SinglePostPage = ({ match }:SinglePostPageProps) => {
       <article className="post">
         <h2>{post.title}</h2>
         <p className="post-content">{post.content}</p>
+        <Link to={`/editPost/${post.id}`} className="button">
+          Edit Post
+        </Link>
       </article>
     </section>
   )

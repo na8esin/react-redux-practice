@@ -14,13 +14,7 @@ export const AddPostForm = () => {
   const onContentChanged = (e: { target: { value: React.SetStateAction<string> } }) => setContent(e.target.value)
   const onSavePostClicked = () => {
     if (title && content) {
-      dispatch(
-        postAdded({
-          id: nanoid(),
-          title,
-          content
-        })
-      )
+      dispatch(postAdded(title, content))
 
       setTitle('')
       setContent('')
