@@ -1,9 +1,8 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { useAppSelector } from '../../app/hooks';
+import { useAppSelector, ReactEvent } from '../../app/hooks';
 import { postAdded } from './postsSlice'
 
-type ReactEvent = { target: { value: React.SetStateAction<string> } };
 
 export const AddPostForm = () => {
   const [title, setTitle] = useState<string>('')

@@ -1,27 +1,27 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import {useAppSelector} from '../../app/hooks';
-import { useHistory } from 'react-router-dom'
+import { useAppSelector, ReactEvent } from '../../app/hooks';
+import { useHistory, RouteComponentProps } from 'react-router-dom'
 
-import { postUpdated } from './postsSlice'
+import { postUpdated, selectPostById } from './postsSlice'
 
-export const EditPostForm = ({ match }) => {
+type EditPostFormProps = RouteComponentProps<{ postId: string }>;
+
+export const EditPostForm = ({ match }: EditPostFormProps) => {
   const { postId } = match.params
 
-  const post = useAppSelector(state =>
-    state.posts.find(post => post.id === postId)
-  )
+  const post = useAppSelector(state => selectPostById(state, postId))
 
   // AddPostFormと比べて初期値が入るようになった
-  const [title, setTitle] = useState(post.title)
-  const [content, setContent] = useState(post.content)
+  const [title, setTitle] = useState(post?.title ?? "")
+  const [content, setContent] = useState(post?.content ?? "")
 
   const dispatch = useDispatch()
   const history = useHistory()
 
   // 以下イベントハンドラ
-  const onTitleChanged = e => setTitle(e.target.value)
-  const onContentChanged = e => setContent(e.target.value)
+  const onTitleChanged = (e: ReactEvent) => setTitle(e.target.value)
+  const onContentChanged = (e: ReactEvent) => setContent(e.target.value)
 
   const onSavePostClicked = () => {
     if (title && content) {

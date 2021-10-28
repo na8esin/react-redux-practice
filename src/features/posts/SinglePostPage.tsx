@@ -2,6 +2,7 @@ import React from 'react'
 import { useAppSelector } from '../../app/hooks';
 import { RouteComponentProps } from 'react-router-dom';
 import { Link } from 'react-router-dom'
+import { selectPostById } from './postsSlice'
 
 type SinglePostPageProps = RouteComponentProps<{ postId: string }>;
 
@@ -9,9 +10,7 @@ type SinglePostPageProps = RouteComponentProps<{ postId: string }>;
 export const SinglePostPage = ({ match }: SinglePostPageProps) => {
   const { postId } = match.params
 
-  const post = useAppSelector(state =>
-    state.posts.find(post => post.id === postId)
-  )
+  const post = useAppSelector(state => selectPostById(state, postId))
 
   if (!post) {
     return (
