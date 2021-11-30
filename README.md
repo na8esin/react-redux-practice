@@ -46,3 +46,9 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 ## msw
 
 `npx msw init public/`
+
+## 進捗
+
+- Async Logic and Data Fetching 完了
+- Adding User Pages
+  - https://redux.js.org/tutorials/essentials/part-6-performance-normalization#adding-user-pages
