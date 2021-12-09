@@ -1,8 +1,8 @@
 import React from 'react'
-import { useAppSelector } from '../../app/hooks';
 import { RouteComponentProps } from 'react-router-dom';
 import { Link } from 'react-router-dom'
-import { selectPostById } from './postsSlice'
+import { Spinner } from '../../components/Spinner'
+import { useGetPostQuery } from '../api/apiSlice'
 
 type SinglePostPageProps = RouteComponentProps<{ postId: string }>;
 
@@ -10,7 +10,7 @@ type SinglePostPageProps = RouteComponentProps<{ postId: string }>;
 export const SinglePostPage = ({ match }: SinglePostPageProps) => {
   const { postId } = match.params
 
-  const post = useAppSelector(state => selectPostById(state, postId))
+  const { data: post, isFetching, isSuccess } = useGetPostQuery(postId)
 
   if (!post) {
     return (
@@ -20,8 +20,11 @@ export const SinglePostPage = ({ match }: SinglePostPageProps) => {
     )
   }
 
-  return (
-    <section>
+  let content
+  if (isFetching) {
+    content = <Spinner text="Loading..." />
+  } else if (isSuccess) {
+    content = (
       <article className="post">
         <h2>{post.title}</h2>
         <p className="post-content">{post.content}</p>
@@ -29,6 +32,9 @@ export const SinglePostPage = ({ match }: SinglePostPageProps) => {
           Edit Post
         </Link>
       </article>
-    </section>
-  )
+
+    )
+  }
+
+  return <section>{content}</section>
 }

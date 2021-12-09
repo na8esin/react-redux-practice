@@ -1,36 +1,32 @@
 import React, { useState } from 'react'
 import { useAppDispatch, useAppSelector, ReactEvent } from '../../app/hooks';
-import { addNewPost } from './postsSlice'
+import { useAddNewPostMutation } from '../api/apiSlice'
+import { selectAllUsers } from '../users/usersSlice'
 
 
 export const AddPostForm = () => {
   const [title, setTitle] = useState<string>('')
   const [content, setContent] = useState<string>('')
   const [userId, setUserId] = useState('')
-  const [addRequestStatus, setAddRequestStatus] = useState('idle')
 
-  const dispatch = useAppDispatch()
-
-  const users = useAppSelector(state => state.users)
-  const canSave =
-    [title, content, userId].every(Boolean) && addRequestStatus === 'idle'
+  const [addNewPost, { isLoading }] = useAddNewPostMutation()
+  const users = useAppSelector(selectAllUsers)
 
   // イベントハンドラ
   const onTitleChanged = (e: ReactEvent) => setTitle(e.target.value)
   const onContentChanged = (e: ReactEvent) => setContent(e.target.value)
   const onAuthorChanged = (e: ReactEvent) => setUserId(e.target.value)
+
+  const canSave = [title, content, userId].every(Boolean) && !isLoading
   const onSavePostClicked = async () => {
     if (canSave) {
       try {
-        setAddRequestStatus('pending')
-        await dispatch(addNewPost({ title, content, user: userId })).unwrap()
+        await addNewPost({ title, content, user: userId }).unwrap()
         setTitle('')
         setContent('')
         setUserId('')
       } catch (err) {
         console.error('Failed to save the post: ', err)
-      } finally {
-        setAddRequestStatus('idle')
       }
     }
   }

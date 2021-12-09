@@ -1,17 +1,13 @@
-import { createSlice, nanoid, createAsyncThunk } from '@reduxjs/toolkit'
-import { RootState } from '../../app/store';
+import {
+  createSlice,
+  nanoid,
+  createAsyncThunk,
+  createSelector,
+  createEntityAdapter
+} from '@reduxjs/toolkit'
+import { RootState } from '../../app/store'
 import { client } from '../../api/client'
-
-export type Post = {
-  id: string;
-  title: string;
-  content: string;
-  date: string;
-  user: string;
-  reactions: {
-    [key: string]: number
-  }
-}
+import { Post } from './post'
 
 export type AddPost = {
   title: string;
@@ -19,17 +15,19 @@ export type AddPost = {
   user: string;
 }
 
-export interface PostState {
-  posts: Post[];
+const postsAdapter = createEntityAdapter<Post>({
+  sortComparer: (a: Post, b: Post) => b.date.localeCompare(a.date)
+})
+
+const extraFields: {
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | undefined | null;
+  error: string | undefined
+} = {
+  status: 'idle',
+  error: undefined
 }
 
-const initialState: PostState = {
-  posts: [],
-  status: 'idle',
-  error: null
-}
+const initialState = postsAdapter.getInitialState(extraFields)
 
 export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
   const response = await client.get('/fakeApi/posts')
@@ -51,34 +49,16 @@ const postsSlice = createSlice({
   name: 'posts',
   initialState,
   reducers: {
-    postAdded: {
-      reducer(state, action) {
-        state.posts.push(action.payload)
-      },
-      prepare: (title, content, userId) => {
-        return {
-          payload: {
-            id: nanoid(),
-            date: new Date().toISOString(),
-            title,
-            content,
-            user: userId
-          },
-          meta: null,
-          error: null
-        }
-      }
-    },
     reactionAdded(state, action) {
       const { postId, reaction } = action.payload
-      const existingPost = state.posts.find(post => post.id === postId)
+      const existingPost = state.entities[postId]
       if (existingPost) {
         existingPost.reactions[reaction]++
       }
     },
     postUpdated(state, action) {
       const { id, title, content } = action.payload
-      const existingPost = state.posts.find(post => post.id === id)
+      const existingPost = state.entities[id]
       if (existingPost) {
         existingPost.title = title
         existingPost.content = content
@@ -93,25 +73,35 @@ const postsSlice = createSlice({
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.status = 'succeeded'
         // Add any fetched posts to the array
-        state.posts = state.posts.concat(action.payload)
+        // Use the `upsertMany` reducer as a mutating update utility
+        postsAdapter.upsertMany(state, action.payload)
       })
       .addCase(fetchPosts.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message
       })
-      .addCase(addNewPost.fulfilled, (state, action) => {
-        // We can directly add the new post object to our posts array
-        state.posts.push(action.payload)
-      })
+      // Use the `addOne` reducer for the fulfilled case
+      .addCase(addNewPost.fulfilled, postsAdapter.addOne)
   }
 })
 
-export const { postAdded, postUpdated, reactionAdded } = postsSlice.actions
+export const { postUpdated, reactionAdded } = postsSlice.actions
 
 export default postsSlice.reducer
 
-// セレクター: RootStateからそれぞれのフィーチャー(機能、画面)用のstateを取り出す
-export const selectAllPosts = (state: RootState) => state.posts.posts
+// Export the customized selectors for this adapter using `getSelectors`
+export const {
+  selectAll: selectAllPosts,
+  selectById: selectPostById,
+  selectIds: selectPostIds
+  // Pass in a selector that returns the posts slice of state
+} = postsAdapter.getSelectors((state: RootState) => state.posts)
 
-export const selectPostById = (state: RootState, postId: string) =>
-  state.posts.posts.find(post => post.id === postId)
+// 呼び出し型: selectPostsByUser(state, userId)
+export const selectPostsByUser = createSelector(
+  // input selector
+  [selectAllPosts, (state, userId) => userId],
+  // output selector
+  // posts: selectAllPosts戻り値, userId: (state, userId) => userIdの戻り値
+  (posts, userId) => posts.filter(post => post.user === userId)
+)

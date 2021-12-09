@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector, ReactEvent } from '../../app/hooks';
 import { Link } from 'react-router-dom'
 
 import { selectUserById } from '../users/usersSlice'
-import { selectAllPosts } from '../posts/postsSlice'
+import { selectPostsByUser } from '../posts/postsSlice'
 
 type UserPageProps = RouteComponentProps<{ userId: string }>;
 
@@ -13,10 +13,7 @@ export const UserPage = ({ match }: UserPageProps) => {
 
   const user = useAppSelector(state => selectUserById(state, userId))
 
-  const postsForUser = useAppSelector(state => {
-    const allPosts = selectAllPosts(state)
-    return allPosts.filter(post => post.user === userId)
-  })
+  const postsForUser = useAppSelector(state => selectPostsByUser(state, userId))
 
   const postTitles = postsForUser.map(post => (
     <li key={post.id}>
